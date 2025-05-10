@@ -116,7 +116,9 @@
             <p>可用保证金: <span id="availableMargin"></span></p>
 			<p>手续费:    <span id="sxf"></span></p>
             <p>做多强平价格: <span id="longLiquidationPrice"></span></p>
+			<p>做多强平比率: <span id="zdbl"></span></p>
             <p>做空强平价格: <span id="shortLiquidationPrice"></span></p>
+			<p>做空强平比率: <span id="zkbl"></span></p>
         </div>
         
         <div class="price-changes">
@@ -157,9 +159,11 @@
             // 计算强平价格
             // 做多强平价格 = 开仓价格*((1-(可用保证-手续费)/开仓价值/(1-维持保证率)))
             const longLiquidationPrice = entryPrice * ((1-(availableMargin-sxf)/positionValue/(1-maintenanceMarginRate)));
+			const zdbl = ((entryPrice * ((1-(availableMargin-sxf)/positionValue/(1-maintenanceMarginRate))))-entryPrice)/entryPrice;
             
             // 做空强平价格 = (开仓价格*(账户总权益-手续费+开仓价值))/(开仓价值+（账户总权益-手续费）*维持保证金权益)
             const shortLiquidationPrice = (entryPrice *(totalEquity-sxf+positionValue)) / (positionValue+(totalEquity-sxf)*maintenanceMarginRate);
+			const zkbl =((entryPrice *(totalEquity-sxf+positionValue)) / (positionValue+(totalEquity-sxf)*maintenanceMarginRate)-entryPrice)/entryPrice;
             
             // 更新结果显示
             document.getElementById('positionSize').textContent = positionSize.toFixed(8);
@@ -169,7 +173,11 @@
 			document.getElementById('sxf').textContent = sxf.toFixed(2);
             document.getElementById('longLiquidationPrice').textContent = longLiquidationPrice.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
             document.getElementById('shortLiquidationPrice').textContent = shortLiquidationPrice.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-            
+            document.getElementById('zdbl').textContent = (zdbl*100).toFixed(2)+ '%';
+			document.getElementById('zdbl').style.color='red';
+			document.getElementById('zkbl').textContent = '+'+(zkbl*100).toFixed(2)+ '%';
+			document.getElementById('zkbl').style.color='green';
+			
             // 生成价格变动表格
             generatePriceChangeTable(entryPrice, positionSize, totalEquity);
         }
