@@ -125,7 +125,7 @@
                     <tr>
                         <th>涨跌幅</th>
                         <th>新价格</th>
-						<th>价差</th>
+			<th>价差</th>
                         <th>盈亏金额</th>
                         <th>新账户权益</th>
                     </tr>
@@ -179,7 +179,7 @@
             changes.forEach(change => {
                 const changePercent = change / 100;
                 const newPrice = entryPrice * (1 + changePercent);
-				const jc = newPrice - entryPrice;
+		const jc = newPrice - entryPrice;
                 const pnl = positionSize * (newPrice - entryPrice);
                 const newEquity = initialEquity + pnl;
                 
