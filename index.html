@@ -143,10 +143,11 @@
                 <thead>
                     <tr>
                         <th>涨跌幅</th>
-                        <th>新价格</th>
-						<th>价差</th>
+			<th>价差</th>
+                        <th>涨价格</th>
+			<th>跌价格</th>
                         <th>盈亏金额</th>
-                        <th>新账户权益</th>
+                        
                     </tr>
                 </thead>
                 <tbody>
@@ -199,24 +200,26 @@
         }
         
         function generatePriceChangeTable(entryPrice, positionSize, initialEquity) {
-            const changes = [0.5, 1, 1.5, 2,  2.5, 3];
+            const changes = [0.5,  1, 1.5, 2, 2.5, 3, 3.5,4,4.5,5];
             const tableBody = document.querySelector('#priceChangeTable tbody');
             tableBody.innerHTML = '';
             
             changes.forEach(change => {
-                const changePercent = change / 100;
-                const newPrice = entryPrice * (1 + changePercent);
-				const jc = newPrice - entryPrice;
-                const pnl = positionSize * (newPrice - entryPrice);
-                const newEquity = initialEquity + pnl;
+                const changePercent = change / 100;				
+                const Priceup = entryPrice * (1 + changePercent);	
+				const Pricedown = entryPrice * (1 - changePercent);
+				const jc = Priceup - entryPrice;
+                const pnl = positionSize * (Priceup - entryPrice);
+                
                 
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${change}%</td>
-                    <td>${newPrice.toFixed(2)}</td>
+                    <td>${change}%</td>	
 					<td>${jc.toFixed(2)}</td>
+                    <td>${Priceup.toFixed(2)}</td>
+					<td>${Pricedown.toFixed(2)}</td>					
                     <td>${pnl.toFixed(2)}</td>
-                    <td>${newEquity.toFixed(2)}</td>
+                    
                 `;
                 tableBody.appendChild(row);
             });
