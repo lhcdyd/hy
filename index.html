@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>杠杆交易计算器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .calculator {
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .results {
+            margin-top: 20px;
+            background-color: #e9f7ef;
+            padding: 15px;
+            border-radius: 4px;
+        }
+        .price-changes {
+            margin-top: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <h1>杠杆交易计算器</h1>
+    
+    <div class="calculator">
+        <div class="input-group">
+            <label for="totalEquity">账户总权益</label>
+            <input type="number" id="totalEquity" value="1000">
+        </div>
+        
+        <div class="input-group">
+            <label for="maintenanceMarginRate">维持保证金率 (%)</label>
+            <input type="number" id="maintenanceMarginRate" value="1" step="0.01">
+        </div>
+        
+        <div class="input-group">
+            <label for="entryPrice">开仓价格</label>
+            <input type="number" id="entryPrice" value="2300" step="0.01">
+        </div>
+        
+        <div class="input-group">
+            <label for="leverage">倍数</label>
+            <input type="number" id="leverage" value="200">
+        </div>
+        
+        <div class="input-group">
+            <label for="positionAmount">开仓金额</label>
+            <input type="number" id="positionAmount" value="200">
+        </div>
+        
+        <button onclick="calculate()">计算</button>
+        
+        <div class="results" id="results">
+            <h3>计算结果</h3>
+            <p>开仓数量: <span id="positionSize"></span></p>
+            <p>开仓价值: <span id="positionValue"></span></p>
+            <p>初始保证金: <span id="initialMargin"></span></p>
+            <p>可用保证金: <span id="availableMargin"></span></p>
+            <p>做多强平价格: <span id="longLiquidationPrice"></span></p>
+            <p>做空强平价格: <span id="shortLiquidationPrice"></span></p>
+        </div>
+        
+        <div class="price-changes">
+            <h3>价格变动影响</h3>
+            <table id="priceChangeTable">
+                <thead>
+                    <tr>
+                        <th>涨跌幅</th>
+                        <th>新价格</th>
+                        <th>盈亏金额</th>
+                        <th>新账户权益</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- 表格内容将通过JavaScript动态生成 -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function calculate() {
+            // 获取输入值
+            const totalEquity = parseFloat(document.getElementById('totalEquity').value);
+            const maintenanceMarginRate = parseFloat(document.getElementById('maintenanceMarginRate').value) / 100;
+            const entryPrice = parseFloat(document.getElementById('entryPrice').value);
+            const leverage = parseFloat(document.getElementById('leverage').value);
+            const positionAmount = parseFloat(document.getElementById('positionAmount').value);
+            
+            // 计算各项指标
+            const positionSize = positionAmount * leverage / entryPrice;
+            const positionValue = positionAmount * leverage;
+            const initialMargin = positionAmount;
+            const availableMargin = totalEquity - initialMargin;
+            
+            // 计算强平价格
+            // 做多强平价格 = 开仓价格 * (1 - (1/杠杆 - 维持保证金率))
+            const longLiquidationPrice = entryPrice * (1 - (1/leverage - maintenanceMarginRate));
+            
+            // 做空强平价格 = 开仓价格 * (1 + (1/杠杆 - 维持保证金率))
+            const shortLiquidationPrice = entryPrice * (1 + (1/leverage - maintenanceMarginRate));
+            
+            // 更新结果显示
+            document.getElementById('positionSize').textContent = positionSize.toFixed(8);
+            document.getElementById('positionValue').textContent = positionValue.toFixed(2);
+            document.getElementById('initialMargin').textContent = initialMargin.toFixed(2);
+            document.getElementById('availableMargin').textContent = availableMargin.toFixed(2);
+            document.getElementById('longLiquidationPrice').textContent = longLiquidationPrice.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            document.getElementById('shortLiquidationPrice').textContent = shortLiquidationPrice.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            
+            // 生成价格变动表格
+            generatePriceChangeTable(entryPrice, positionSize, totalEquity);
+        }
+        
+        function generatePriceChangeTable(entryPrice, positionSize, initialEquity) {
+            const changes = [-0.5,0.5, -1, 1,-1.5, 1.5, -2, 2, -2.5, 2.5, -3, 3];
+            const tableBody = document.querySelector('#priceChangeTable tbody');
+            tableBody.innerHTML = '';
+            
+            changes.forEach(change => {
+                const changePercent = change / 100;
+                const newPrice = entryPrice * (1 + changePercent);
+                const pnl = positionSize * (newPrice - entryPrice);
+                const newEquity = initialEquity + pnl;
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${change}%</td>
+                    <td>${newPrice.toFixed(2)}</td>
+                    <td>${pnl.toFixed(2)}</td>
+                    <td>${newEquity.toFixed(2)}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // 页面加载时自动计算一次
+        window.onload = calculate;
+    </script>
+</body>
+</html>
