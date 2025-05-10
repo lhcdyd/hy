@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>杠杆交易计算器</title>
+    <title>保证金计算器</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -78,7 +78,7 @@
     </style>
 </head>
 <body>
-    <h1>杠杆交易计算器</h1>
+    <h1>保证金计算器</h1>
     
     <div class="calculator">
         <div class="input-group">
@@ -114,6 +114,7 @@
             <p>开仓价值: <span id="positionValue"></span></p>
             <p>初始保证金: <span id="initialMargin"></span></p>
             <p>可用保证金: <span id="availableMargin"></span></p>
+			<p>手续费:    <span id="sxf"></span></p>
             <p>做多强平价格: <span id="longLiquidationPrice"></span></p>
             <p>做空强平价格: <span id="shortLiquidationPrice"></span></p>
         </div>
@@ -125,7 +126,7 @@
                     <tr>
                         <th>涨跌幅</th>
                         <th>新价格</th>
-			<th>价差</th>
+						<th>价差</th>
                         <th>盈亏金额</th>
                         <th>新账户权益</th>
                     </tr>
@@ -151,19 +152,21 @@
             const positionValue = positionAmount * leverage;
             const initialMargin = positionAmount;
             const availableMargin = totalEquity - initialMargin;
+			const sxf = positionAmount * leverage * 0.0005;
             
             // 计算强平价格
-            // 做多强平价格 = 开仓价格 * (1 - (1/杠杆 - 维持保证金率))
-            const longLiquidationPrice = entryPrice * (1 - (1/leverage - maintenanceMarginRate));
+            // 做多强平价格 = 开仓价格*((1-(可用保证-手续费)/开仓价值/(1-维持保证率)))
+            const longLiquidationPrice = entryPrice * ((1-(availableMargin-sxf)/positionValue/(1-maintenanceMarginRate)));
             
-            // 做空强平价格 = 开仓价格 * (1 + (1/杠杆 - 维持保证金率))
-            const shortLiquidationPrice = entryPrice * (1 + (1/leverage - maintenanceMarginRate));
+            // 做空强平价格 = (开仓价格*(账户总权益-手续费+开仓价值))/(开仓价值+（账户总权益-手续费）*维持保证金权益)
+            const shortLiquidationPrice = (entryPrice *(totalEquity-sxf+positionValue)) / (positionValue+(totalEquity-sxf)*maintenanceMarginRate);
             
             // 更新结果显示
             document.getElementById('positionSize').textContent = positionSize.toFixed(8);
             document.getElementById('positionValue').textContent = positionValue.toFixed(2);
             document.getElementById('initialMargin').textContent = initialMargin.toFixed(2);
             document.getElementById('availableMargin').textContent = availableMargin.toFixed(2);
+			document.getElementById('sxf').textContent = sxf.toFixed(2);
             document.getElementById('longLiquidationPrice').textContent = longLiquidationPrice.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
             document.getElementById('shortLiquidationPrice').textContent = shortLiquidationPrice.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
             
@@ -179,7 +182,7 @@
             changes.forEach(change => {
                 const changePercent = change / 100;
                 const newPrice = entryPrice * (1 + changePercent);
-		const jc = newPrice - entryPrice;
+				const jc = newPrice - entryPrice;
                 const pnl = positionSize * (newPrice - entryPrice);
                 const newEquity = initialEquity + pnl;
                 
@@ -187,7 +190,7 @@
                 row.innerHTML = `
                     <td>${change}%</td>
                     <td>${newPrice.toFixed(2)}</td>
-		    <td>${jc.toFixed(2)}</td>
+					<td>${jc.toFixed(2)}</td>
                     <td>${pnl.toFixed(2)}</td>
                     <td>${newEquity.toFixed(2)}</td>
                 `;
